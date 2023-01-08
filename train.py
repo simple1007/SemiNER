@@ -222,17 +222,8 @@ def dataset():
                         break
 steps_per_epoch = 9318 * 0.9 * 0.9#int((X.shape[0]//BATCH * 0.9) * 0.9)
 steps_per_val = 9318 * 0.9 * 0.1#(X.shape[0]//BATCH*0.9) - steps_per_epoch#int((X.shape[0]//BATCH *0.9) * 0.1)
-# print(X_test.shape)
-# import sys
-# sys.exit()
 
-
-# d = { v:k for k,v in tokenizer_y.word_index.items()}
-# print("FFFF",d[43],"GGGGG")
-# import sys
-# sys.exit()
-
-if False:
+if True:
     def dataset2():
         for _ in range(EPOCH):
             for i in range(int(9318 * 0.9)):
@@ -243,80 +234,25 @@ if False:
     # in_word = Input(shape=(max_len,300))
     in_word = Input(shape=(max_len))
     emb = Embedding(len(tokenizer_x.word_index.keys())+1,80)(in_word)
-    # emb = tf.expand_dims(emb,1)
-    # emb = tf.expand_dims(emb,-1)
-    # # print(emb.shape)
-    # conv = Conv2D(30,(3,100),activation='relu',input_shape=((w_len,100,1)))(emb)
-    # conv = Reshape((conv.shape[1],conv.shape[2],conv.shape[4]))(conv)
-    # conv = tf.reshape(conv,(conv.shape[1],conv.shape[2]*conv.shape[3]))
-    # print(conv.shape)
-    # print(conv.shape)
-    # import sys
-    # sys.exit()
-    # conv = TimeDistributed(GlobalMaxPooling1D())(conv)
-    # print(conv.shape)
-    # import sys
-    # sys.exit()
-    # in_word2 = Input(shape=(max_morph_len,))
-    # emb2 = emb_layer2(in_word2)
-    # bilstm = tf.keras.layers.TimeDistributed(Bidirectional(LSTM(60)))(emb)
+   
     bilstm = Bidirectional(LSTM(100,return_sequences=True))(emb)
-    # print(bilstm.shape)
-    # import sys
-    # sys.exit()
-    # avg = Average()([bilstm])
-    # time = TimeDistributed(Dense(20))(emb)
-    # avg = GlobalAvgPool1D()(bilstm)
-    # avg = tf.expand_dims(avg,1)
-    # print(avg.shape)
-    # print(bilstm.shape)
-    # import sys
-    # sys.exit()
-    # concat = Concatenate(axis=1)([avg,bilstm])
-    # bilstm = Bidirectional(LSTM(20))(bilstm)
-    # bilstm2 = Bidirectional(LSTM(250))(emb2)
-    # bilstm = Concatenate()([bilstm,bilstm2])
-    # bilstm = Dense(100)(bilstm)
-    # concat = Concatenate()([time,bilstm])
-    # bilstm = TimeDistributed(Dense(100,activation='relu'))(bilstm)
-
-    # print(in_word.shape())
-    # import sys
-    # sys.exit()
-
-    # print(in_word.shape())
-    # import sys
-    # sys.exit()
-    # bilstm = Dense(3000,activation='relu')(bilstm)
-    # output = Bidirectional(LSTM(len(tokenizer_y.word_index.keys())+1,return_sequences=True),merge_mode='sum')(bilstm)
     output = TimeDistributed(Dense(len(tokenizer_y.word_index.keys())+1,activation='softmax'))(bilstm)
     # output = bilstm
     model = Model(inputs=in_word,outputs=output)
 
     model.compile(optimizer='adam',loss='sparse_categorical_crossentropy',metrics=['accuracy'])
     model.summary()
-    # print(len(set(y_dict.keys())))
-    #train_data = dataset()
-    #val_data = validation()
+
     callback = [tf.keras.callbacks.EarlyStopping(monitor='val_loss',patience=2),
                 tf.keras.callbacks.ModelCheckpoint(filepath='ner.model',monitor='val_loss',save_best_only=True)]
     ds = dataset2()
-    # while True:
-    #     d = next(ds)
-    #     print(d[0].shape,d[1].shape)
-    # print(next(ds)[1].shape)
-    # import sys
-    # sys.exit()
+
     model.fit(ds,epochs=EPOCH,batch_size=BATCH,steps_per_epoch=steps_per_epoch,validation_data=ds,validation_steps=steps_per_val,callbacks=callback)
 
     model.save('ner.model_last')
-# import sys
-# sys.exit()
-# import sys
-# sys.exit()
+
 model = tf.keras.models.load_model('ner.model')
-# print("ff",X_test.shape)
-# Y_corr = Y_test\
+
 res = []
 corr = []
 pred_temp = []
@@ -350,17 +286,7 @@ def testset():
                             # value=len(tokenizer_y.word_index.keys())+1
                         )
                         yield np.array(x_emb),np.array(y_temp)
-                    # if int(X.shape[0]//BATCH * 0.9) <= count:
-                    #     continue
 
-# for ii in tqdm(range(X_test.shape[0])):#enumerate(X_test):
-    # xt = X_test[ii]
-    # pred_temp.append(xt)
-# ts = testset()
-# print("garbage start")
-# for _ in tqdm(range(int(X.shape[0]//BATCH * 0.9))):
-    # next(ts)
-    # print('1')
 print("test start")
 Y_pr = []
 corr = []
@@ -370,10 +296,7 @@ for i in tqdm(range(int(9318*0.9),9318)):
     # pred_temp,Y_test = next(ts)
     pred_temp = np.load('data/%05d_x.npy'%i)
     Y_test = np.load('data/%05d_y.npy'%i)
-    # print(pred_temp.shape,Y_test.shape)
-        # if len(pred_temp) == BATCH or ii >= X_test.shape[0]-1:
-            # pred_temp = np.array(pred_temp)
-            # x_emb = make_seq(model_wv,pred_temp)
+
     Y_test_pr = model.predict(np.array(pred_temp),verbose=0)
     Y_test_pr = np.argmax(Y_test_pr,axis=-1)
     result = []
@@ -383,21 +306,14 @@ for i in tqdm(range(int(9318*0.9),9318)):
         corr.append(yt)
         X.append(x)
     c+=1
-    # if c == 10:
-    #     break
-    # print(Y[0])
+
 
 Y_test_pr = np.array(Y_pr)
 corr = np.array(corr)
 
 print(Y_test_pr.shape)
 print(corr.shape)
-# print(Y_test_pr[0].shape)
-# import sys
-# sys.exit()
-# print(corr[0],Y_test_pr[0])
-# import sys
-# sys.exit()
+
 pr_tag = tokenizer_y.sequences_to_texts(Y_test_pr)
 y_tag = tokenizer_y.sequences_to_texts(corr)
 X = tokenizer_x.sequences_to_texts(X)
@@ -432,8 +348,6 @@ for p,xx in zip(pr_tag,X):
             if pp == 'O' and prev != '' and start != -1 and end != -1:
                 xx[start] = '_'+p[start]+'!##!'+xx[start]
                 xx[end] = xx[end] + '!##!2'+'_'
-                # print(xx[start:end+1])
-                # print(p[start:end+1])
         
             prev = ''
             start = -1
@@ -462,18 +376,13 @@ for p,xx in zip(y_tag,X):
             if pp == 'O' and prev != '' and start != -1 and end != -1:
                 xx[start] = '_'+p[start]+'!##!'+xx[start]
                 xx[end] = xx[end] + '!##!2'+'_'
-                # print(xx[start:end+1])
-                # print(p[start:end+1])
+
         
             prev = ''
             start = -1
             end = -1
     true_.write(''.join(xx)+'\n')
 
-        # temp = pp
-    # print(xx)
-        # temp = pp
-    # print(p)
 import sys
 sys.exit()
 
