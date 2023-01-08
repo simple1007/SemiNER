@@ -128,7 +128,7 @@ for file in filelist:
                                 X.append(s)
                                 Y.append(label)
 
-if False:
+if True:
     tokenizer_y.fit_on_texts(Y)
     with open('tokenizer_y.pkl','wb') as f:
         pickle.dump(tokenizer_y,f)
